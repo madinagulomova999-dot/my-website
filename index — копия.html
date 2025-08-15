@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Heart — HTML Canvas</title>
+  <style>
+    html,body{height:100%;margin:0;background:#000;}
+    canvas{display:block;width:100%;height:100%;}
+  </style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+function resize(){
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// рисуем линии от центра к точкам параметрического сердца
+// x = 16 sin^3 t
+// y = 13 cos t − 5 cos 2t − 2 cos 3t − cos 4t
+function heartPoint(t){
+  const x = 16 * Math.pow(Math.sin(t), 3);
+  const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+  return {x, y};
+}
+
+let t = 0;
+const tMax = Math.PI * 2;
+const step = 0.01;        // скорость прорисовки (меньше — медленнее)
+const scale = Math.min(canvas.width, canvas.height) * 0.025;
+
+function draw(){
+  // слегка «остаточное свечение»
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.save();
+  ctx.translate(canvas.width/2, canvas.height/2 + 20); // немного вниз, как на фото
+
+  // цвет линий (ярко-розовый)
+  ctx.strokeStyle = '#ff3b7b';
+  ctx.lineWidth = 1;
+
+  // рисуем несколько линий за кадр
+  for(let k=0;k<50 && t<tMax;k++, t+=step){
+    const p = heartPoint(t);
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(p.x * scale, -p.y * scale); // инвертируем y для canvas
+    ctx.stroke();
+  }
+
+  ctx.restore();
+
+  if(t < tMax){
+    requestAnimationFrame(draw);
+  } else {
+    // лёгкое мерцание после завершения
+    t = 0; // убери эту строку, если не хочешь перерисовку по кругу
+    requestAnimationFrame(draw);
+  }
+}
+
+draw();
+</script>
+</body>
+</html>
