@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dushanbe AQI Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+        #map { height: 600px; }
+        .legend { background: white; padding: 6px; line-height: 18px; color: #555; }
+        .legend i { width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.7; }
+    </style>
+</head>
+<body>
+
+<h2>Dushanbe Air Quality (AQI) Map</h2>
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // Initialize map
+    var map = L.map('map').setView([38.5598, 68.7870], 12);
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Function to determine color by AQI
+    function getColor(aqi) {
+        return aqi <= 50 ? 'green' :
+               aqi <= 100 ? 'yellow' :
+               aqi <= 150 ? 'orange' :
+               aqi <= 200 ? 'red' :
+               aqi <= 300 ? 'purple' : 'maroon';
+    }
+
+    // Function to provide health advice based on AQI
+    function getHealthAdvice(aqi) {
+        if (aqi <= 50) return "Air quality is good. No health impact.";
+        else if (aqi <= 100) return "Air quality is moderate. Sensitive groups should reduce prolonged outdoor exertion.";
+        else if (aqi <= 150) return "Unhealthy for sensitive groups. Limit outdoor activities.";
+        else if (aqi <= 200) return "Unhealthy. Everyone should reduce outdoor activities.";
+        else if (aqi <= 300) return "Very unhealthy. Avoid outdoor activities, wear masks.";
+        else return "Hazardous. Stay indoors, use air purifiers, wear protective masks.";
+    }
+
+    // Example AQI data (можно потом подставить JSON с данными NASA / IQAir)
+    var aqiData = [
+        {lat:38.5598, lon:68.7870, aqi:120, place:"Dushanbe Center"},
+        {lat:38.5740, lon:68.7740, aqi:80, place:"Shahriston Road"},
+        {lat:38.5480, lon:68.7900, aqi:40, place:"Botanical Garden"},
+        {lat:38.5650, lon:68.8100, aqi:160, place:"Industrial Area"}
+    ];
+
+    // Add circles for each point
+    aqiData.forEach(function(point){
+        var color = getColor(point.aqi);
+        var advice = getHealthAdvice(point.aqi);
+        L.circle([point.lat, point.lon], {
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.5,
+            radius: 200
+        }).addTo(map)
+        .bindPopup("<b>" + point.place + "</b><br>AQI: " + point.aqi + "<br>" + advice);
+    });
+
+    // Add legend
+    var legend = L.control({position: 'bottomright'});
+    legend.onAdd = function(map) {
+        var div = L.DomUtil.create('div', 'legend');
+        var grades = [0, 51, 101, 151, 201, 301];
+        var colors = ['green', 'yellow', 'orange', 'red', 'purple', 'maroon'];
+        var labels = [];
+        for (var i = 0; i < grades.length; i++) {
+            labels.push('<i style="background:' + colors[i] + '"></i> ' +
+                        grades[i] + (grades[i + 1] ? '&ndash;' + (grades[i + 1]-1) : '+'));
+        }
+        div.innerHTML = labels.join('<br>');
+        return div;
+    };
+    legend.addTo(map);
+</script>
+
+</body>
+</html>
